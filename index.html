@@ -1,0 +1,861 @@
+```html
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ester Reaction Timeline Game</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Segoe UI", sans-serif;
+    background: #f4f7fb;
+    color: #1e293b;
+}
+
+/* HEADER */
+header {
+    background: #4338ca;
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 36px;
+}
+
+header p {
+    margin: 10px 0 0;
+    opacity: 0.9;
+}
+
+/* GAME */
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.mode-select {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mode-select button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: white;
+    color: #4338ca;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.mode-select button.active {
+    background: #4338ca;
+    color: white;
+}
+
+.info {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+
+.info h2 {
+    margin-top: 0;
+    color: #4338ca;
+}
+
+/* SCORE */
+.stats {
+    display: flex;
+    justify-content: space-around;
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat span {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.stat strong {
+    display: block;
+    font-size: 24px;
+    color: #4338ca;
+}
+
+/* TIMELINE */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.step {
+    background: white;
+    border: 2px solid #dbe3f0;
+    border-radius: 14px;
+    padding: 18px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    cursor: grab;
+
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+
+    transition: 0.2s;
+}
+
+.step:hover {
+    transform: translateY(-2px);
+}
+
+.step.dragging {
+    opacity: 0.5;
+}
+
+.number {
+    min-width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #4338ca;
+    color: white;
+
+    font-weight: bold;
+}
+
+.text {
+    flex: 1;
+    line-height: 1.5;
+}
+
+.drag {
+    font-size: 22px;
+    color: #94a3b8;
+}
+
+/* BUTTON */
+.check-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: #4338ca;
+    color: white;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.check-btn:hover {
+    background: #3730a3;
+}
+
+.reset-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px;
+
+    border: 2px solid #4338ca;
+    border-radius: 12px;
+
+    background: white;
+    color: #4338ca;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+/* RESULT */
+.result {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+
+    border-radius: 15px;
+
+    text-align: center;
+
+    background: white;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.correct {
+    border-color: #22c55e !important;
+    background: #f0fdf4 !important;
+}
+
+.wrong {
+    border-color: #ef4444 !important;
+    background: #fef2f2 !important;
+}
+
+@media (max-width: 600px) {
+
+    header h1 {
+        font-size: 28px;
+    }
+
+    .stats {
+        font-size: 14px;
+    }
+
+    .step {
+        padding: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>🧪 Ester Reaction Timeline</h1>
+
+    <p>
+        เกมเรียงลำดับขั้นตอนกลไกปฏิกิริยา
+    </p>
+
+</header>
+
+
+<div class="container">
+
+    <!-- MODE -->
+
+    <div class="mode-select">
+
+        <button id="esterBtn"
+                class="active"
+                onclick="changeMode('ester')">
+
+            ⚗️ Esterification
+
+        </button>
+
+        <button id="hydroBtn"
+                onclick="changeMode('hydrolysis')">
+
+            💧 Hydrolysis
+
+        </button>
+
+    </div>
+
+
+    <!-- INFO -->
+
+    <div class="info">
+
+        <h2 id="title">
+            Esterification
+        </h2>
+
+        <p id="description">
+            เรียงลำดับขั้นตอนการเกิดเอสเทอร์
+            จากสารตั้งต้นไปจนถึงผลิตภัณฑ์
+        </p>
+
+        <b>
+            👉 ลากการ์ดเพื่อจัดลำดับ
+        </b>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <span>คะแนน</span>
+
+            <strong id="score">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>ข้อ</span>
+
+            <strong id="question">
+                1
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>ถูก</span>
+
+            <strong id="correct">
+                0
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- TIMELINE -->
+
+    <div
+        class="timeline"
+        id="timeline">
+    </div>
+
+
+    <button
+        class="check-btn"
+        onclick="checkAnswer()">
+
+        ✅ ตรวจคำตอบ
+
+    </button>
+
+
+    <button
+        class="reset-btn"
+        onclick="newQuestion()">
+
+        🔄 สุ่มโจทย์ใหม่
+
+    </button>
+
+
+    <!-- RESULT -->
+
+    <div
+        class="result"
+        id="result">
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   DATA
+========================================== */
+
+const esterQuestions = [
+
+    {
+        steps: [
+            "กรดคาร์บอกซิลิกและแอลกอฮอล์เป็นสารตั้งต้น",
+            "เติมกรดซัลฟิวริกเข้มข้นเป็นตัวเร่งปฏิกิริยา",
+            "ให้ความร้อนแก่สารผสม",
+            "เกิดปฏิกิริยาควบแน่นและมีน้ำเกิดขึ้น",
+            "ได้ผลิตภัณฑ์เป็นเอสเทอร์และน้ำ"
+        ]
+    },
+
+    {
+        steps: [
+            "กรดคาร์บอกซิลิกทำปฏิกิริยากับแอลกอฮอล์",
+            "ออกซิเจนของหมู่คาร์บอนิลได้รับการกระตุ้น",
+            "แอลกอฮอล์เข้าทำปฏิกิริยากับคาร์บอนของคาร์บอกซิล",
+            "มีการถ่ายโอนโปรตอนภายในโมเลกุล",
+            "น้ำถูกกำจัดออกและเกิดเอสเทอร์"
+        ]
+    }
+
+];
+
+
+const hydrolysisQuestions = [
+
+    {
+        steps: [
+            "เอสเทอร์ทำปฏิกิริยากับน้ำ",
+            "น้ำเข้าทำปฏิกิริยากับหมู่เอสเทอร์",
+            "เกิดการแตกพันธะของหมู่เอสเทอร์",
+            "เกิดกรดคาร์บอกซิลิก",
+            "เกิดแอลกอฮอล์เป็นผลิตภัณฑ์อีกชนิด"
+        ]
+    },
+
+    {
+        steps: [
+            "นำเอสเทอร์มาทำปฏิกิริยากับน้ำ",
+            "น้ำเข้าทำปฏิกิริยาบริเวณหมู่คาร์บอนิล",
+            "เกิดสารตัวกลางระหว่างปฏิกิริยา",
+            "พันธะเอสเทอร์ถูกทำลาย",
+            "ได้กรดคาร์บอกซิลิกและแอลกอฮอล์"
+        ]
+    }
+
+];
+
+
+/* ==========================================
+   VARIABLES
+========================================== */
+
+let mode = "ester";
+
+let currentQuestion = 0;
+
+let score = 0;
+
+let correctCount = 0;
+
+
+/* ==========================================
+   CHANGE MODE
+========================================== */
+
+function changeMode(newMode) {
+
+    mode = newMode;
+
+    currentQuestion = 0;
+
+    document
+        .getElementById("esterBtn")
+        .classList.remove("active");
+
+    document
+        .getElementById("hydroBtn")
+        .classList.remove("active");
+
+
+    if (mode === "ester") {
+
+        document
+            .getElementById("esterBtn")
+            .classList.add("active");
+
+        document
+            .getElementById("title")
+            .textContent =
+            "Esterification";
+
+        document
+            .getElementById("description")
+            .textContent =
+            "เรียงลำดับขั้นตอนการเกิดเอสเทอร์";
+
+    }
+
+    else {
+
+        document
+            .getElementById("hydroBtn")
+            .classList.add("active");
+
+        document
+            .getElementById("title")
+            .textContent =
+            "Hydrolysis";
+
+        document
+            .getElementById("description")
+            .textContent =
+            "เรียงลำดับขั้นตอนการไฮโดรลิซิสของเอสเทอร์";
+
+    }
+
+    newQuestion();
+}
+
+
+/* ==========================================
+   GET QUESTIONS
+========================================== */
+
+function getQuestions() {
+
+    if (mode === "ester") {
+
+        return esterQuestions;
+
+    }
+
+    return hydrolysisQuestions;
+
+}
+
+
+/* ==========================================
+   CREATE QUESTION
+========================================== */
+
+function newQuestion() {
+
+    const questions = getQuestions();
+
+    const question =
+        questions[
+            Math.floor(
+                Math.random() * questions.length
+            )
+        ];
+
+    const timeline =
+        document.getElementById("timeline");
+
+    timeline.innerHTML = "";
+
+    document
+        .getElementById("result")
+        .style.display = "none";
+
+
+    /*
+       สร้าง array ที่สับลำดับแล้ว
+    */
+
+    let shuffled =
+        [...question.steps]
+        .sort(() => Math.random() - 0.5);
+
+
+    shuffled.forEach((text, index) => {
+
+        const step =
+            document.createElement("div");
+
+        step.className = "step";
+
+        step.draggable = true;
+
+        step.dataset.text = text;
+
+
+        step.innerHTML = `
+
+            <div class="number">
+                ${index + 1}
+            </div>
+
+            <div class="text">
+                ${text}
+            </div>
+
+            <div class="drag">
+                ☰
+            </div>
+
+        `;
+
+
+        /*
+           Drag events
+        */
+
+        step.addEventListener(
+            "dragstart",
+            dragStart
+        );
+
+        step.addEventListener(
+            "dragover",
+            dragOver
+        );
+
+        step.addEventListener(
+            "drop",
+            drop
+        );
+
+
+        timeline.appendChild(step);
+
+    });
+
+
+    updateNumbers();
+
+}
+
+
+/* ==========================================
+   DRAG
+========================================== */
+
+let dragged = null;
+
+
+function dragStart(e) {
+
+    dragged = this;
+
+    this.classList.add("dragging");
+
+}
+
+
+function dragOver(e) {
+
+    e.preventDefault();
+
+}
+
+
+function drop(e) {
+
+    e.preventDefault();
+
+    this.classList.remove("dragging");
+
+    if (dragged === this)
+        return;
+
+
+    const timeline =
+        document.getElementById("timeline");
+
+
+    const all =
+        [...timeline.children];
+
+
+    const draggedIndex =
+        all.indexOf(dragged);
+
+    const targetIndex =
+        all.indexOf(this);
+
+
+    if (draggedIndex < targetIndex) {
+
+        timeline.insertBefore(
+            dragged,
+            this.nextSibling
+        );
+
+    }
+
+    else {
+
+        timeline.insertBefore(
+            dragged,
+            this
+        );
+
+    }
+
+
+    updateNumbers();
+
+}
+
+
+/* ==========================================
+   UPDATE NUMBERS
+========================================== */
+
+function updateNumbers() {
+
+    const steps =
+        document.querySelectorAll(".step");
+
+    steps.forEach((step, index) => {
+
+        step
+            .querySelector(".number")
+            .textContent =
+            index + 1;
+
+    });
+
+}
+
+
+/* ==========================================
+   CHECK ANSWER
+========================================== */
+
+function checkAnswer() {
+
+    const questions =
+        getQuestions();
+
+    /*
+       หาคำถามปัจจุบันจากข้อมูลที่
+       ใช้สร้างการ์ดไม่ได้โดยตรง
+       จึงใช้ข้อความตามลำดับที่ถูก
+    */
+
+    const current =
+        questions.find(q => {
+
+            const cards =
+                [...document.querySelectorAll(".step")]
+                .map(x => x.dataset.text);
+
+            return q.steps.includes(cards[0]);
+
+        });
+
+
+    if (!current)
+        return;
+
+
+    const cards =
+        [...document.querySelectorAll(".step")];
+
+
+    const answer =
+        cards.map(card =>
+            card.dataset.text
+        );
+
+
+    const correctAnswer =
+        current.steps;
+
+
+    const isCorrect =
+        JSON.stringify(answer) ===
+        JSON.stringify(correctAnswer);
+
+
+    const result =
+        document.getElementById("result");
+
+
+    if (isCorrect) {
+
+        cards.forEach(card => {
+
+            card.classList.add("correct");
+
+        });
+
+
+        score += 100;
+
+        correctCount++;
+
+
+        document
+            .getElementById("score")
+            .textContent = score;
+
+
+        document
+            .getElementById("correct")
+            .textContent =
+            correctCount;
+
+
+        result.style.display = "block";
+
+        result.innerHTML = `
+
+            <h2>🎉 ถูกต้อง!</h2>
+
+            <p>
+                มึงเรียงลำดับกลไกได้ถูกต้อง
+            </p>
+
+            <h3>
+                +100 คะแนน
+            </h3>
+
+        `;
+
+    }
+
+    else {
+
+        cards.forEach(card => {
+
+            card.classList.add("wrong");
+
+        });
+
+
+        result.style.display = "block";
+
+        result.innerHTML = `
+
+            <h2>❌ ยังไม่ถูก</h2>
+
+            <p>
+                ลองดูหลักการของปฏิกิริยาอีกครั้ง
+            </p>
+
+            <hr>
+
+            <b>
+                ลำดับที่ถูกต้อง
+            </b>
+
+            <ol>
+                ${correctAnswer
+                    .map(step =>
+                        `<li>${step}</li>`
+                    )
+                    .join("")
+                }
+            </ol>
+
+        `;
+
+    }
+
+}
+
+
+/* ==========================================
+   START
+========================================== */
+
+newQuestion();
+
+</script>
+
+</body>
+</html>
+```
