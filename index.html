@@ -3,496 +3,972 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ester Reaction Timeline</title>
+
+<title>Ester Reaction Timeline Game</title>
 
 <style>
 * {
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, "Noto Sans Thai", sans-serif;
-    background: #f5f7fb;
-    color: #222;
+:root {
+    --primary: #FF6B6B;
+    --primary-dark: #E8590C;
+    --grad-start: #FF8787;
+    --grad-end: #FFC078;
 }
 
+body.theme-hydro {
+    --primary: #339AF0;
+    --primary-dark: #1971C2;
+    --grad-start: #66D9E8;
+    --grad-end: #4DABF7;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #FFF7F0 0%, #F4F7FB 260px);
+    color: #1e293b;
+    transition: background 0.4s ease;
+}
+
+body.theme-hydro {
+    background: linear-gradient(180deg, #EDFBFD 0%, #F4F7FB 260px);
+}
+
+/* HEADER */
 header {
-    background: #ffffff;
-    padding: 25px 20px;
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    color: white;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    padding: 35px 20px;
+    transition: background 0.4s ease;
 }
 
 header h1 {
     margin: 0;
-    font-size: 30px;
+    font-size: 36px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 header p {
-    margin: 8px 0 0;
-    color: #666;
+    margin: 10px 0 0;
+    opacity: 0.95;
 }
 
+/* GAME */
 .container {
     max-width: 900px;
     margin: 30px auto;
     padding: 0 20px;
 }
 
-.mode-buttons {
+.mode-select {
     display: flex;
-    justify-content: center;
     gap: 10px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-.mode-btn {
-    padding: 12px 20px;
-    border: 1px solid #ccc;
-    background: white;
+.mode-select button {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid transparent;
     border-radius: 10px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.mode-btn.active {
-    background: #222;
-    color: white;
-}
-
-.game-box {
     background: white;
-    border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    color: #94a3b8;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    transition: 0.2s;
 }
 
-.question {
+#esterBtn.active {
+    background: linear-gradient(135deg, #FF8787, #FFA94D);
+    color: white;
+    border-color: #E8590C;
+}
+
+#hydroBtn.active {
+    background: linear-gradient(135deg, #66D9E8, #4DABF7);
+    color: white;
+    border-color: #1971C2;
+}
+
+.info {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    border-left: 6px solid var(--primary);
+}
+
+.info h2 {
+    margin-top: 0;
+    color: var(--primary-dark);
+}
+
+/* SCORE */
+.stats {
+    display: flex;
+    justify-content: space-around;
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+
+.stat {
     text-align: center;
-    margin-bottom: 25px;
 }
 
-.question h2 {
-    margin: 0 0 8px;
+.stat span {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
 }
 
-.question p {
-    color: #666;
-    margin: 0;
+.stat strong {
+    display: block;
+    font-size: 24px;
 }
 
+.stat.score strong { color: #7C4DFF; }
+.stat.question strong { color: var(--primary-dark); }
+.stat.correct strong { color: #2FB380; }
+
+/* TIMELINE */
 .timeline {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 300px;
 }
 
-.card {
-    background: #ffffff;
-    border: 2px solid #ddd;
-    border-radius: 12px;
+.step {
+    background: white;
+    border: 2px solid #eef1f6;
+    border-left: 8px solid var(--step-color, #ccc);
+    border-radius: 14px;
     padding: 18px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
     cursor: grab;
-    user-select: none;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+
+    transition: 0.2s;
 }
 
-.card:hover {
-    border-color: #888;
+.step:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
 }
 
-.card:active {
-    cursor: grabbing;
+.step.dragging {
+    opacity: 0.5;
 }
 
-/* สำคัญ: ตอนลากไม่ให้การ์ดหรือข้อความจาง */
-.card.dragging {
-    opacity: 1 !important;
-    transform: scale(1.03);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
-    border-color: #222;
-}
+.number {
+    min-width: 40px;
+    height: 40px;
 
-.card-number {
-    display: inline-flex;
-    width: 30px;
-    height: 30px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    background: #222;
-    color: white;
+
     border-radius: 50%;
-    margin-right: 10px;
-    font-weight: bold;
-}
 
-.card-text {
-    font-size: 17px;
-    font-weight: 500;
-}
-
-.card.correct {
-    border-color: #2e8b57;
-    background: #eefaf2;
-}
-
-.card.wrong {
-    border-color: #d9534f;
-    background: #fff1f1;
-}
-
-.buttons {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 25px;
-    flex-wrap: wrap;
-}
-
-button {
-    border: none;
-    padding: 13px 22px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.check-btn {
-    background: #222;
+    background: var(--step-color, #ccc);
     color: white;
+
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.new-btn {
-    background: #e9e9e9;
-    color: #222;
+.text {
+    flex: 1;
+    line-height: 1.5;
 }
 
-button:hover {
+.drag {
+    font-size: 22px;
+    color: #94a3b8;
+}
+
+/* BUTTON */
+.check-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    color: white;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: 0.2s;
+}
+
+.check-btn:hover {
+    filter: brightness(0.95);
     transform: translateY(-1px);
 }
 
-.result {
-    text-align: center;
-    margin-top: 20px;
-    min-height: 30px;
-    font-size: 18px;
+.reset-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px;
+
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+
+    background: white;
+    color: var(--primary-dark);
+
+    font-size: 16px;
     font-weight: bold;
+
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.score {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-    color: #555;
+.reset-btn:hover {
+    background: #fff5f0;
 }
+
+body.theme-hydro .reset-btn:hover {
+    background: #f0fbff;
+}
+
+/* RESULT */
+.result {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+
+    border-radius: 15px;
+
+    text-align: center;
+
+    background: white;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+}
+
+.correct {
+    border-color: #22c55e !important;
+    background: #f0fdf4 !important;
+}
+
+.wrong {
+    border-color: #ef4444 !important;
+    background: #fef2f2 !important;
+}
+
+.result.win { border-color: #22c55e; }
+.result.lose { border-color: #ef4444; }
 
 @media (max-width: 600px) {
+
     header h1 {
-        font-size: 24px;
+        font-size: 28px;
     }
 
-    .game-box {
-        padding: 18px;
+    .stats {
+        font-size: 14px;
     }
 
-    .card {
-        padding: 15px;
-    }
-
-    .card-text {
-        font-size: 15px;
+    .step {
+        padding: 14px;
     }
 }
 </style>
 </head>
 
-<body>
+<body id="pageBody">
 
 <header>
+
     <h1>🧪 Ester Reaction Timeline</h1>
-    <p>ลากขั้นตอนของปฏิกิริยาให้เรียงลำดับอย่างถูกต้อง</p>
+
+    <p>
+        เกมเรียงลำดับขั้นตอนกลไกปฏิกิริยา
+    </p>
+
 </header>
+
 
 <div class="container">
 
-    <div class="mode-buttons">
-        <button class="mode-btn active" id="esterificationBtn"
-            onclick="changeMode('esterification')">
+    <!-- MODE -->
+
+    <div class="mode-select">
+
+        <button id="esterBtn"
+                class="active"
+                onclick="changeMode('ester')">
+
+            ⚗️ Esterification
+
+        </button>
+
+        <button id="hydroBtn"
+                onclick="changeMode('hydrolysis')">
+
+            💧 Hydrolysis
+
+        </button>
+
+    </div>
+
+
+    <!-- INFO -->
+
+    <div class="info">
+
+        <h2 id="title">
             Esterification
-        </button>
+        </h2>
 
-        <button class="mode-btn" id="hydrolysisBtn"
-            onclick="changeMode('hydrolysis')">
-            Hydrolysis
-        </button>
-    </div>
+        <p id="description">
+            เรียงลำดับขั้นตอนการเกิดเอสเทอร์
+            จากสารตั้งต้นไปจนถึงผลิตภัณฑ์
+        </p>
 
-    <div class="game-box">
+        <b>
+            👉 ลากการ์ดเพื่อจัดลำดับ
+        </b>
 
-        <div class="question">
-            <h2 id="questionTitle">Esterification</h2>
-            <p>ลากการ์ดเพื่อจัดลำดับขั้นตอนให้ถูกต้อง</p>
-        </div>
+        <br>
 
-        <div class="timeline" id="timeline"></div>
-
-        <div class="buttons">
-            <button class="check-btn" onclick="checkAnswer()">
-                ✓ ตรวจคำตอบ
-            </button>
-
-            <button class="new-btn" onclick="newQuestion()">
-                ↻ ข้อใหม่
-            </button>
-        </div>
-
-        <div class="result" id="result"></div>
-
-        <div class="score">
-            <div>คะแนน: <b id="score">0</b></div>
-            <div>ถูก: <b id="correct">0</b></div>
-            <div>ข้อ: <b id="questionNumber">1</b></div>
-        </div>
+        <b>
+            ✅ ตรวจคำตอบได้หลายรอบ จนกว่าจะถูก
+        </b>
 
     </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat score">
+
+            <span>คะแนน</span>
+
+            <strong id="score">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="stat question">
+
+            <span>ข้อ</span>
+
+            <strong id="question">
+                1
+            </strong>
+
+        </div>
+
+
+        <div class="stat correct">
+
+            <span>ถูก</span>
+
+            <strong id="correct">
+                0
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- TIMELINE -->
+
+    <div
+        class="timeline"
+        id="timeline">
+    </div>
+
+
+    <button
+        class="check-btn"
+        onclick="checkAnswer()">
+
+        ✅ ตรวจคำตอบ
+
+    </button>
+
+
+    <button
+        class="reset-btn"
+        onclick="newQuestion()">
+
+        🔄 สุ่มโจทย์ใหม่
+
+    </button>
+
+
+    <!-- RESULT -->
+
+    <div
+        class="result"
+        id="result">
+
+    </div>
+
 </div>
+
 
 <script>
 
-const questions = {
+/* ==========================================
+   DATA
+========================================== */
 
-    esterification: [
-        {
-            title: "Esterification",
-            steps: [
-                "กรดคาร์บอกซิลิกทำปฏิกิริยากับแอลกอฮอล์",
-                "เติมกรดเข้มข้น เช่น H₂SO₄ เพื่อเป็นตัวเร่งปฏิกิริยา",
-                "เกิดการรวมตัวและมีการถ่ายโอนโปรตอน",
-                "น้ำถูกกำจัดออกจากระบบ",
-                "เกิดเอสเทอร์และน้ำ"
-            ]
-        },
+const esterQuestions = [
 
-        {
-            title: "Esterification",
-            steps: [
-                "เริ่มจากกรดคาร์บอกซิลิกและแอลกอฮอล์",
-                "โปรตอนจากกรดเข้มข้นช่วยกระตุ้นหมู่คาร์บอนิล",
-                "แอลกอฮอล์เข้าทำปฏิกิริยากับคาร์บอนิล",
-                "มีการถ่ายโอนโปรตอนและกำจัดน้ำ",
-                "ได้ผลิตภัณฑ์เป็นเอสเทอร์"
-            ]
-        }
-    ],
+    {
+        steps: [
+            "กรดคาร์บอกซิลิกและแอลกอฮอล์เป็นสารตั้งต้น",
+            "เติมกรดซัลฟิวริกเข้มข้นเป็นตัวเร่งปฏิกิริยา",
+            "ให้ความร้อนแก่สารผสม",
+            "เกิดปฏิกิริยาควบแน่นและมีน้ำเกิดขึ้น",
+            "ได้ผลิตภัณฑ์เป็นเอสเทอร์และน้ำ"
+        ]
+    },
 
-    hydrolysis: [
-        {
-            title: "Hydrolysis",
-            steps: [
-                "เริ่มจากเอสเทอร์",
-                "เติมน้ำเพื่อทำให้เกิดปฏิกิริยาไฮโดรลิซิส",
-                "น้ำเข้าทำปฏิกิริยากับหมู่เอสเทอร์",
-                "พันธะเอสเทอร์เกิดการแตกออก",
-                "ได้กรดคาร์บอกซิลิกและแอลกอฮอล์"
-            ]
-        },
+    {
+        steps: [
+            "กรดคาร์บอกซิลิกทำปฏิกิริยากับแอลกอฮอล์",
+            "ออกซิเจนของหมู่คาร์บอนิลได้รับการกระตุ้น",
+            "แอลกอฮอล์เข้าทำปฏิกิริยากับคาร์บอนของคาร์บอกซิล",
+            "มีการถ่ายโอนโปรตอนภายในโมเลกุล",
+            "น้ำถูกกำจัดออกและเกิดเอสเทอร์"
+        ]
+    }
 
-        {
-            title: "Hydrolysis",
-            steps: [
-                "นำเอสเทอร์มาทำปฏิกิริยากับน้ำ",
-                "กรดช่วยเร่งปฏิกิริยาไฮโดรลิซิส",
-                "น้ำเข้าทำปฏิกิริยาบริเวณหมู่คาร์บอนิล",
-                "เกิดการถ่ายโอนโปรตอนและการแตกพันธะ",
-                "ได้กรดคาร์บอกซิลิกและแอลกอฮอล์"
-            ]
-        }
-    ]
-};
+];
 
 
-let currentMode = "esterification";
-let currentQuestion = null;
+const hydrolysisQuestions = [
+
+    {
+        steps: [
+            "เอสเทอร์ทำปฏิกิริยากับน้ำ",
+            "น้ำเข้าทำปฏิกิริยากับหมู่เอสเทอร์",
+            "เกิดการแตกพันธะของหมู่เอสเทอร์",
+            "เกิดกรดคาร์บอกซิลิก",
+            "เกิดแอลกอฮอล์เป็นผลิตภัณฑ์อีกชนิด"
+        ]
+    },
+
+    {
+        steps: [
+            "นำเอสเทอร์มาทำปฏิกิริยากับน้ำ",
+            "น้ำเข้าทำปฏิกิริยาบริเวณหมู่คาร์บอนิล",
+            "เกิดสารตัวกลางระหว่างปฏิกิริยา",
+            "พันธะเอสเทอร์ถูกทำลาย",
+            "ได้กรดคาร์บอกซิลิกและแอลกอฮอล์"
+        ]
+    }
+
+];
+
+/* rainbow palette for the position markers — tied to CURRENT slot,
+   not the correct answer, so it never gives the order away */
+const STEP_COLORS = ["#FF6B6B", "#FFA94D", "#FFD43B", "#69DB7C", "#4DABF7"];
+
+
+/* ==========================================
+   VARIABLES
+========================================== */
+
+let mode = "ester";
+
+let currentQuestion = 0;
+
 let score = 0;
-let correct = 0;
-let questionCount = 1;
 
-const timeline = document.getElementById("timeline");
-const result = document.getElementById("result");
+let correctCount = 0;
 
-function changeMode(mode) {
 
-    currentMode = mode;
+/* ==========================================
+   CHANGE MODE
+========================================== */
 
-    document.getElementById("esterificationBtn")
-        .classList.toggle("active", mode === "esterification");
+function changeMode(newMode) {
 
-    document.getElementById("hydrolysisBtn")
-        .classList.toggle("active", mode === "hydrolysis");
+    mode = newMode;
 
-    score = 0;
-    correct = 0;
-    questionCount = 1;
+    currentQuestion = 0;
 
-    document.getElementById("score").textContent = score;
-    document.getElementById("correct").textContent = correct;
-    document.getElementById("questionNumber").textContent = questionCount;
+    document
+        .getElementById("esterBtn")
+        .classList.remove("active");
+
+    document
+        .getElementById("hydroBtn")
+        .classList.remove("active");
+
+    document
+        .getElementById("pageBody")
+        .classList.toggle("theme-hydro", mode === "hydrolysis");
+
+
+    if (mode === "ester") {
+
+        document
+            .getElementById("esterBtn")
+            .classList.add("active");
+
+        document
+            .getElementById("title")
+            .textContent =
+            "Esterification";
+
+        document
+            .getElementById("description")
+            .textContent =
+            "เรียงลำดับขั้นตอนการเกิดเอสเทอร์";
+
+    }
+
+    else {
+
+        document
+            .getElementById("hydroBtn")
+            .classList.add("active");
+
+        document
+            .getElementById("title")
+            .textContent =
+            "Hydrolysis";
+
+        document
+            .getElementById("description")
+            .textContent =
+            "เรียงลำดับขั้นตอนการไฮโดรลิซิสของเอสเทอร์";
+
+    }
 
     newQuestion();
 }
 
 
-function newQuestion() {
+/* ==========================================
+   GET QUESTIONS
+========================================== */
 
-    const questionList = questions[currentMode];
+function getQuestions() {
 
-    currentQuestion =
-        questionList[Math.floor(Math.random() * questionList.length)];
+    if (mode === "ester") {
 
-    document.getElementById("questionTitle").textContent =
-        currentQuestion.title;
-
-    result.textContent = "";
-
-    timeline.innerHTML = "";
-
-    // สร้างลำดับที่ถูกต้องแล้วสับการ์ด
-    let shuffled = [...currentQuestion.steps];
-
-    shuffled.sort(() => Math.random() - 0.5);
-
-    shuffled.forEach((step, index) => {
-
-        const card = document.createElement("div");
-
-        card.className = "card";
-        card.draggable = true;
-
-        card.innerHTML = `
-            <span class="card-number">${index + 1}</span>
-            <span class="card-text">${step}</span>
-        `;
-
-        addDragEvents(card);
-
-        timeline.appendChild(card);
-    });
-}
-
-
-function addDragEvents(card) {
-
-    card.addEventListener("dragstart", () => {
-        card.classList.add("dragging");
-    });
-
-    card.addEventListener("dragend", () => {
-        card.classList.remove("dragging");
-    });
-
-    card.addEventListener("dragover", (e) => {
-
-        e.preventDefault();
-
-        const draggingCard =
-            document.querySelector(".dragging");
-
-        if (!draggingCard || draggingCard === card) return;
-
-        const rect = card.getBoundingClientRect();
-
-        const middle = rect.top + rect.height / 2;
-
-        if (e.clientY < middle) {
-            timeline.insertBefore(draggingCard, card);
-        } else {
-            timeline.insertBefore(
-                draggingCard,
-                card.nextSibling
-            );
-        }
-    });
-}
-
-
-function updateNumbers() {
-
-    const cards =
-        document.querySelectorAll(".card");
-
-    cards.forEach((card, index) => {
-
-        card.querySelector(".card-number")
-            .textContent = index + 1;
-
-    });
-}
-
-
-function checkAnswer() {
-
-    updateNumbers();
-
-    const cards =
-        document.querySelectorAll(".card");
-
-    let playerAnswer = [];
-
-    cards.forEach(card => {
-
-        playerAnswer.push(
-            card.querySelector(".card-text").textContent
-        );
-
-    });
-
-    let isCorrect = true;
-
-    for (let i = 0; i < currentQuestion.steps.length; i++) {
-
-        if (playerAnswer[i] !== currentQuestion.steps[i]) {
-            isCorrect = false;
-        }
+        return esterQuestions;
 
     }
 
-    cards.forEach((card, index) => {
+    return hydrolysisQuestions;
 
-        card.classList.remove("correct", "wrong");
+}
 
-        if (playerAnswer[index] === currentQuestion.steps[index]) {
-            card.classList.add("correct");
-        } else {
-            card.classList.add("wrong");
-        }
+
+/* ==========================================
+   CREATE QUESTION
+========================================== */
+
+function newQuestion() {
+
+    const questions = getQuestions();
+
+    const question =
+        questions[
+            Math.floor(
+                Math.random() * questions.length
+            )
+        ];
+
+    const timeline =
+        document.getElementById("timeline");
+
+    timeline.innerHTML = "";
+
+    document
+        .getElementById("result")
+        .style.display = "none";
+
+    document
+        .getElementById("result")
+        .classList.remove("win", "lose");
+
+
+    /*
+       สร้าง array ที่สับลำดับแล้ว
+    */
+
+    let shuffled =
+        [...question.steps]
+        .sort(() => Math.random() - 0.5);
+
+
+    shuffled.forEach((text, index) => {
+
+        const step =
+            document.createElement("div");
+
+        step.className = "step";
+
+        step.draggable = true;
+
+        step.dataset.text = text;
+
+
+        step.innerHTML = `
+
+            <div class="number">
+                ${index + 1}
+            </div>
+
+            <div class="text">
+                ${text}
+            </div>
+
+            <div class="drag">
+                ☰
+            </div>
+
+        `;
+
+
+        /*
+           Drag events
+        */
+
+        step.addEventListener(
+            "dragstart",
+            dragStart
+        );
+
+        step.addEventListener(
+            "dragend",
+            dragEnd
+        );
+
+        step.addEventListener(
+            "dragover",
+            dragOver
+        );
+
+        step.addEventListener(
+            "drop",
+            drop
+        );
+
+
+        timeline.appendChild(step);
 
     });
+
+
+    updateNumbers();
+
+}
+
+
+/* ==========================================
+   DRAG
+========================================== */
+
+let dragged = null;
+
+
+function dragStart(e) {
+
+    dragged = this;
+
+    this.classList.add("dragging");
+
+    /* clear any previous check result so a fresh
+       drag always starts from a clean slate */
+
+    document
+        .querySelectorAll(".step")
+        .forEach(step => {
+            step.classList.remove("correct", "wrong");
+        });
+
+    document
+        .getElementById("result")
+        .style.display = "none";
+
+    document
+        .getElementById("result")
+        .classList.remove("win", "lose");
+
+}
+
+
+function dragEnd(e) {
+
+    /* this used to only fire inside drop(), which
+       targets the drop ZONE, not the dragged card —
+       so the card stayed stuck at opacity 0.5 forever.
+       dragend always fires on the dragged element itself. */
+
+    this.classList.remove("dragging");
+
+}
+
+
+function dragOver(e) {
+
+    e.preventDefault();
+
+}
+
+
+function drop(e) {
+
+    e.preventDefault();
+
+    this.classList.remove("dragging");
+
+    if (dragged === this)
+        return;
+
+
+    const timeline =
+        document.getElementById("timeline");
+
+
+    const all =
+        [...timeline.children];
+
+
+    const draggedIndex =
+        all.indexOf(dragged);
+
+    const targetIndex =
+        all.indexOf(this);
+
+
+    if (draggedIndex < targetIndex) {
+
+        timeline.insertBefore(
+            dragged,
+            this.nextSibling
+        );
+
+    }
+
+    else {
+
+        timeline.insertBefore(
+            dragged,
+            this
+        );
+
+    }
+
+
+    updateNumbers();
+
+}
+
+
+/* ==========================================
+   UPDATE NUMBERS
+========================================== */
+
+function updateNumbers() {
+
+    const steps =
+        document.querySelectorAll(".step");
+
+    steps.forEach((step, index) => {
+
+        step
+            .querySelector(".number")
+            .textContent =
+            index + 1;
+
+        const color = STEP_COLORS[index % STEP_COLORS.length];
+        step.style.setProperty("--step-color", color);
+
+    });
+
+}
+
+
+/* ==========================================
+   CHECK ANSWER
+========================================== */
+
+function checkAnswer() {
+
+    const questions =
+        getQuestions();
+
+    /*
+       หาคำถามปัจจุบันจากข้อมูลที่
+       ใช้สร้างการ์ดไม่ได้โดยตรง
+       จึงใช้ข้อความตามลำดับที่ถูก
+    */
+
+    const current =
+        questions.find(q => {
+
+            const cards =
+                [...document.querySelectorAll(".step")]
+                .map(x => x.dataset.text);
+
+            return q.steps.includes(cards[0]);
+
+        });
+
+
+    if (!current)
+        return;
+
+
+    const cards =
+        [...document.querySelectorAll(".step")];
+
+
+    const answer =
+        cards.map(card =>
+            card.dataset.text
+        );
+
+
+    const correctAnswer =
+        current.steps;
+
+
+    const isCorrect =
+        JSON.stringify(answer) ===
+        JSON.stringify(correctAnswer);
+
+
+    const result =
+        document.getElementById("result");
+
+    /* wipe the previous attempt's styling so checking
+       again always reflects the current arrangement */
+
+    cards.forEach(card => {
+        card.classList.remove("correct", "wrong");
+    });
+
+    result.classList.remove("win", "lose");
 
 
     if (isCorrect) {
 
-        score += 10;
-        correct++;
+        cards.forEach(card => {
 
-        result.textContent = "🎉 ถูกต้อง! เรียงลำดับได้ครบแล้ว";
+            card.classList.add("correct");
 
-    } else {
+        });
 
-        result.textContent =
-            "❌ ยังไม่ถูก ลองดูตำแหน่งที่เป็นสีแดงแล้วจัดใหม่";
+
+        score += 100;
+
+        correctCount++;
+
+
+        document
+            .getElementById("score")
+            .textContent = score;
+
+
+        document
+            .getElementById("correct")
+            .textContent =
+            correctCount;
+
+
+        result.style.display = "block";
+        result.classList.add("win");
+
+        result.innerHTML = `
+
+            <h2>🎉 ถูกต้อง!</h2>
+
+            <p>
+                คุณเรียงลำดับกลไกได้ถูกต้อง
+            </p>
+
+            <h3>
+                +100 คะแนน
+            </h3>
+
+        `;
 
     }
 
-    document.getElementById("score").textContent = score;
-    document.getElementById("correct").textContent = correct;
+    else {
+
+        cards.forEach(card => {
+
+            card.classList.add("wrong");
+
+        });
+
+
+        result.style.display = "block";
+        result.classList.add("lose");
+
+        result.innerHTML = `
+
+            <h2>❌ ยังไม่ถูก</h2>
+
+            <p>
+                ลองดูหลักการของปฏิกิริยาอีกครั้ง
+            </p>
+
+            <hr>
+
+            <b>
+                ลำดับที่ถูกต้อง
+            </b>
+
+            <ol>
+                ${correctAnswer
+                    .map(step =>
+                        `<li>${step}</li>`
+                    )
+                    .join("")
+                }
+            </ol>
+
+        `;
+
+    }
+
 }
 
 
-// เริ่มเกม
+/* ==========================================
+   START
+========================================== */
+
 newQuestion();
 
 </script>
