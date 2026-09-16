@@ -158,6 +158,10 @@ header p {
     gap: 15px;
 
     cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
 
@@ -171,6 +175,7 @@ header p {
 
 .step.dragging {
     opacity: 0.5;
+    cursor: grabbing;
 }
 
 .number {
@@ -634,8 +639,6 @@ function newQuestion() {
 
         step.className = "step";
 
-        step.draggable = true;
-
         step.dataset.text = text;
 
 
@@ -657,27 +660,32 @@ function newQuestion() {
 
 
         /*
-           Drag events
+           Drag events — Pointer Events, so this works the
+           same on mouse, touch (iOS/Android), and pen. The
+           old HTML5 dragstart/dragover/drop API is not
+           supported for touch on iOS Safari, which is why
+           dragging silently did nothing there.
         */
 
         step.addEventListener(
-            "dragstart",
-            dragStart
+            "pointerdown",
+            onPointerDown
         );
 
         step.addEventListener(
-            "dragend",
-            dragEnd
+            "pointermove",
+            onPointerMove,
+            { passive: false }
         );
 
         step.addEventListener(
-            "dragover",
-            dragOver
+            "pointerup",
+            onPointerUp
         );
 
         step.addEventListener(
-            "drop",
-            drop
+            "pointercancel",
+            onPointerUp
         );
 
 
@@ -692,17 +700,19 @@ function newQuestion() {
 
 
 /* ==========================================
-   DRAG
+   DRAG (Pointer Events — works on mouse & touch)
 ========================================== */
 
-let dragged = null;
+let pointerDragged = null;
 
 
-function dragStart(e) {
+function onPointerDown(e) {
 
-    dragged = this;
+    pointerDragged = this;
 
     this.classList.add("dragging");
+
+    this.setPointerCapture(e.pointerId);
 
     /* clear any previous check result so a fresh
        drag always starts from a clean slate */
@@ -724,70 +734,71 @@ function dragStart(e) {
 }
 
 
-function dragEnd(e) {
+function onPointerMove(e) {
 
-    /* this used to only fire inside drop(), which
-       targets the drop ZONE, not the dragged card —
-       so the card stayed stuck at opacity 0.5 forever.
-       dragend always fires on the dragged element itself. */
-
-    this.classList.remove("dragging");
-
-}
-
-
-function dragOver(e) {
-
-    e.preventDefault();
-
-}
-
-
-function drop(e) {
-
-    e.preventDefault();
-
-    this.classList.remove("dragging");
-
-    if (dragged === this)
+    if (!pointerDragged)
         return;
 
+    e.preventDefault();
+
+    /* setPointerCapture keeps these move events firing on the
+       card that started the drag no matter where the finger
+       or cursor currently is, so we look up whatever element
+       is physically under the pointer right now to decide
+       where the card should land */
+
+    const target =
+        document.elementFromPoint(e.clientX, e.clientY);
+
+    const overStep =
+        target ? target.closest(".step") : null;
+
+    if (!overStep || overStep === pointerDragged)
+        return;
 
     const timeline =
         document.getElementById("timeline");
 
+    const rect =
+        overStep.getBoundingClientRect();
 
-    const all =
-        [...timeline.children];
+    const midpoint =
+        rect.top + rect.height / 2;
 
+    if (e.clientY < midpoint) {
 
-    const draggedIndex =
-        all.indexOf(dragged);
-
-    const targetIndex =
-        all.indexOf(this);
-
-
-    if (draggedIndex < targetIndex) {
-
-        timeline.insertBefore(
-            dragged,
-            this.nextSibling
-        );
+        timeline.insertBefore(pointerDragged, overStep);
 
     }
 
     else {
 
         timeline.insertBefore(
-            dragged,
-            this
+            pointerDragged,
+            overStep.nextSibling
         );
 
     }
 
-
     updateNumbers();
+
+}
+
+
+function onPointerUp(e) {
+
+    if (!pointerDragged)
+        return;
+
+    pointerDragged.classList.remove("dragging");
+
+    try {
+        pointerDragged.releasePointerCapture(e.pointerId);
+    } catch (err) {
+        /* pointer was already released — safe to ignore */
+    }
+
+    pointerDragged = null;
 
 }
 
